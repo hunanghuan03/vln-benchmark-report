@@ -1,0 +1,2392 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VLN Benchmark 指令风格调研报告</title>
+<style>
+  /* ===== 飞书风格设计系统 ===== */
+  :root {
+    --bg-page: #faf9f7;
+    --bg-content: #ffffff;
+    --bg-sidebar: #f5f4f1;
+    --bg-hover: #efeeea;
+    --bg-active: #e7e6e1;
+    --bg-quote: #f7f5f0;
+    --bg-code: #f4f3ee;
+    --bg-tag-blue: #e8f1fb;
+    --bg-tag-green: #e8f5ec;
+    --bg-tag-orange: #fdf0e3;
+    --bg-tag-red: #fbeaea;
+    --bg-tag-purple: #f0ebf7;
+    --bg-tag-gray: #efeeea;
+
+    --text-primary: #1f2329;
+    --text-secondary: #4e5969;
+    --text-tertiary: #86909c;
+    --text-link: #3370ff;
+    --text-tag-blue: #1664c0;
+    --text-tag-green: #2a9d3a;
+    --text-tag-orange: #d56b00;
+    --text-tag-red: #b8312f;
+    --text-tag-purple: #7048a3;
+
+    --border-subtle: #e5e4df;
+    --border-default: #d9d8d2;
+
+    --shadow-sm: 0 1px 2px rgba(31, 35, 41, 0.04);
+    --shadow-md: 0 2px 8px rgba(31, 35, 41, 0.06);
+    --shadow-lg: 0 4px 16px rgba(31, 35, 41, 0.08);
+
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+
+    --sidebar-width: 280px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei",
+                 "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background: var(--bg-page);
+    color: var(--text-primary);
+    line-height: 1.7;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ===== 整体布局 ===== */
+  .layout {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ===== 侧边栏 ===== */
+  .sidebar {
+    width: var(--sidebar-width);
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border-subtle);
+    padding: 28px 16px;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 10;
+  }
+
+  .sidebar-header {
+    padding: 0 12px 20px;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 16px;
+  }
+
+  .sidebar-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    letter-spacing: 0.2px;
+  }
+
+  .sidebar-subtitle {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    line-height: 1.5;
+  }
+
+  .nav-section {
+    margin-bottom: 8px;
+  }
+
+  .nav-section-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 8px 12px 4px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-size: 14px;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+    line-height: 1.4;
+  }
+
+  .nav-item:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+  }
+
+  .nav-item.active {
+    background: var(--bg-active);
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  .nav-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    background: var(--bg-content);
+    border: 1px solid var(--border-subtle);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+  }
+
+  .nav-item.active .nav-icon {
+    background: var(--text-primary);
+    color: #fff;
+    border-color: var(--text-primary);
+  }
+
+  /* ===== 主内容区 ===== */
+  .main {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    padding: 48px 56px 80px;
+    max-width: calc(100vw - var(--sidebar-width));
+  }
+
+  .content-wrapper {
+    max-width: 920px;
+    margin: 0 auto;
+  }
+
+  /* ===== 页面切换 ===== */
+  .page { display: none; animation: fadeIn 0.25s ease; }
+  .page.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== 排版 ===== */
+  .page-meta {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  h1 {
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.3;
+    margin-bottom: 12px;
+    letter-spacing: -0.3px;
+  }
+
+  .page-subtitle {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+    line-height: 1.6;
+  }
+
+  h2 {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 40px 0 16px;
+    letter-spacing: -0.2px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  h2:first-of-type { margin-top: 0; }
+
+  h3 {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 28px 0 12px;
+  }
+
+  h4 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 20px 0 8px;
+  }
+
+  p {
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+  }
+
+  strong { color: var(--text-primary); font-weight: 600; }
+
+  /* ===== 标签 ===== */
+  .tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 16px 0 24px;
+  }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+
+  .tag-blue { background: var(--bg-tag-blue); color: var(--text-tag-blue); }
+  .tag-green { background: var(--bg-tag-green); color: var(--text-tag-green); }
+  .tag-orange { background: var(--bg-tag-orange); color: var(--text-tag-orange); }
+  .tag-red { background: var(--bg-tag-red); color: var(--text-tag-red); }
+  .tag-purple { background: var(--bg-tag-purple); color: var(--text-tag-purple); }
+  .tag-gray { background: var(--bg-tag-gray); color: var(--text-secondary); }
+
+  /* ===== 卡片 ===== */
+  .card {
+    background: var(--bg-content);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin: 16px 0;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .card-compact {
+    padding: 16px 20px;
+  }
+
+  /* 信息字段 */
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px 24px;
+    margin: 16px 0;
+  }
+
+  .info-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 0;
+  }
+
+  .info-label {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    font-weight: 500;
+  }
+
+  .info-value {
+    font-size: 14px;
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  /* ===== 引用块(英文原文) ===== */
+  blockquote {
+    background: var(--bg-quote);
+    border-left: 3px solid var(--border-default);
+    padding: 12px 16px;
+    margin: 12px 0;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    font-style: italic;
+  }
+
+  blockquote.original {
+    border-left-color: #c4a35a;
+    background: #fbf7ee;
+  }
+
+  blockquote.translation {
+    border-left-color: #6b9b7a;
+    background: #f0f6f1;
+    font-style: normal;
+    color: var(--text-primary);
+  }
+
+  .quote-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 6px;
+    color: var(--text-tertiary);
+    font-style: normal;
+  }
+
+  /* ===== 代码块 ===== */
+  pre {
+    background: var(--bg-code);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    overflow-x: auto;
+    font-family: "SF Mono", Monaco, Menlo, Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    margin: 12px 0;
+  }
+
+  code {
+    font-family: "SF Mono", Monaco, Menlo, Consolas, monospace;
+    font-size: 13px;
+    background: var(--bg-code);
+    padding: 2px 6px;
+    border-radius: 3px;
+    color: #b8312f;
+  }
+
+  pre code {
+    background: transparent;
+    padding: 0;
+    color: inherit;
+  }
+
+  /* ===== 表格 ===== */
+  .table-wrap {
+    overflow-x: auto;
+    margin: 16px 0;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    background: var(--bg-content);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  th {
+    background: var(--bg-sidebar);
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+  }
+
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    vertical-align: top;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg-quote); }
+
+  td strong { color: var(--text-primary); }
+
+  /* ===== 列表 ===== */
+  ul, ol {
+    margin: 12px 0 12px 24px;
+    color: var(--text-secondary);
+  }
+
+  li { margin-bottom: 6px; }
+
+  /* ===== 流程图(简易ASCII风格的样式化版本) ===== */
+  .flow-step {
+    background: var(--bg-content);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    margin: 8px 0;
+    font-size: 14px;
+    position: relative;
+  }
+
+  .flow-arrow {
+    text-align: center;
+    color: var(--text-tertiary);
+    margin: 4px 0;
+    font-size: 18px;
+  }
+
+  .flow-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 11px;
+    background: var(--text-primary);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    margin-right: 8px;
+  }
+
+  /* ===== 高亮提示框 ===== */
+  .callout {
+    border-radius: var(--radius-md);
+    padding: 14px 18px;
+    margin: 16px 0;
+    border: 1px solid;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .callout-info {
+    background: #f0f6ff;
+    border-color: #cee0fb;
+    color: #1664c0;
+  }
+
+  .callout-success {
+    background: #f0f9f1;
+    border-color: #c8e6cd;
+    color: #2a9d3a;
+  }
+
+  .callout-warning {
+    background: #fff8ec;
+    border-color: #f6e0b0;
+    color: #b87a00;
+  }
+
+  .callout-danger {
+    background: #fdf2f2;
+    border-color: #f4d3d2;
+    color: #b8312f;
+  }
+
+  .callout-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .callout-content {
+    flex: 1;
+    font-size: 14px;
+    color: var(--text-primary);
+    line-height: 1.6;
+  }
+
+  .callout-content strong { color: inherit; }
+
+  /* ===== Hero 概览页 ===== */
+  .hero {
+    background: linear-gradient(135deg, #faf9f7 0%, #f4f1ec 100%);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    margin-bottom: 24px;
+  }
+
+  .hero-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+
+  .hero-desc {
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 16px;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 32px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+
+  .hero-stat-num {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .hero-stat-label {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-top: 2px;
+  }
+
+  /* 概览卡片网格 */
+  .overview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin: 16px 0;
+  }
+
+  .overview-card {
+    background: var(--bg-content);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 18px 20px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: left;
+    border-width: 1px;
+    font-family: inherit;
+    width: 100%;
+  }
+
+  .overview-card:hover {
+    border-color: var(--border-default);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
+
+  .overview-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .overview-card-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .overview-card-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
+
+  .overview-card-meta {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    display: flex;
+    gap: 12px;
+  }
+
+  /* ===== 风格对比项 ===== */
+  .style-compare {
+    background: var(--bg-content);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    margin: 8px 0;
+  }
+
+  .style-compare-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }
+
+  .style-compare-summary {
+    font-size: 13px;
+    color: var(--text-tertiary);
+    margin-bottom: 8px;
+  }
+
+  .style-compare-example {
+    font-size: 14px;
+    color: var(--text-primary);
+    background: var(--bg-quote);
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    font-family: "PingFang SC", -apple-system, sans-serif;
+  }
+
+  /* ===== 滚动条 ===== */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #d9d8d2; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #b8b7b1; }
+
+  /* ===== 响应式(嵌入飞书时容器可能较窄) ===== */
+  @media (max-width: 1024px) {
+    :root { --sidebar-width: 240px; }
+    .main { padding: 32px 32px 60px; }
+  }
+
+  @media (max-width: 768px) {
+    .sidebar {
+      position: relative;
+      width: 100%;
+      height: auto;
+      border-right: none;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .layout { flex-direction: column; }
+    .main { margin-left: 0; padding: 24px 20px 60px; max-width: 100%; }
+    h1 { font-size: 24px; }
+    .hero { padding: 20px; }
+  }
+
+  /* 内嵌脚注样式 */
+  .footnote {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .label-tag {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-right: 6px;
+    background: var(--bg-tag-gray);
+    color: var(--text-secondary);
+  }
+
+  /* 章节标题前的小图标 */
+  .section-icon {
+    display: inline-block;
+    width: 4px;
+    height: 16px;
+    background: var(--text-primary);
+    border-radius: 2px;
+    margin-right: 10px;
+    vertical-align: -2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ===================== 侧边栏 ===================== -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">VLN Benchmark 调研</div>
+      <div class="sidebar-subtitle">指令风格 · GT 轨迹 · 生成方法</div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">总览</div>
+      <button class="nav-item active" data-target="overview">
+        <span class="nav-icon">★</span>
+        <span>横向对比与建议</span>
+      </button>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">经典基准</div>
+      <button class="nav-item" data-target="r2r">
+        <span class="nav-icon">1</span>
+        <span>R2R</span>
+      </button>
+      <button class="nav-item" data-target="rxr">
+        <span class="nav-icon">2</span>
+        <span>RxR</span>
+      </button>
+      <button class="nav-item" data-target="vlnce">
+        <span class="nav-icon">3</span>
+        <span>VLN-CE</span>
+      </button>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">新工作</div>
+      <button class="nav-item" data-target="havln">
+        <span class="nav-icon">4</span>
+        <span>HA-VLN 2.0 / HA-R2R</span>
+      </button>
+      <button class="nav-item" data-target="roomtour">
+        <span class="nav-icon">5</span>
+        <span>RoomTour3D</span>
+      </button>
+      <button class="nav-item" data-target="cinst">
+        <span class="nav-icon">6</span>
+        <span>C-Instructor</span>
+      </button>
+      <button class="nav-item" data-target="lhvln">
+        <span class="nav-icon">7</span>
+        <span>LH-VLN / LHPR-VLN</span>
+      </button>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">实操参考</div>
+      <button class="nav-item" data-target="prompt-recipe">
+        <span class="nav-icon">▶</span>
+        <span>推荐 Prompt 方案</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ===================== 主内容区 ===================== -->
+  <main class="main">
+    <div class="content-wrapper">
+
+    <!-- ============= PAGE: 总览 ============= -->
+    <section class="page active" id="page-overview">
+      <div class="page-meta">总览页</div>
+      <h1>VLN Benchmark 指令风格调研</h1>
+      <p class="page-subtitle">围绕 7 个 Vision-and-Language Navigation 工作的指令"问法"、GT 轨迹设计、自动生成方法的横向对比与选型建议。</p>
+
+      <div class="hero">
+        <div class="hero-title">为什么要做这个调研?</div>
+        <div class="hero-desc">
+          我们要发的是<strong>新 benchmark 论文</strong>,而不是方法论文。要让现有 SOTA 模型能在我们的 benchmark 上"涨点",生成的 instruction 必须与<strong>主流风格(尤其 R2R 系列)</strong>对齐。本调研梳理 7 个代表性工作的指令风格、轨迹设计与生成方法,作为我们 instruction generation 模块的设计依据。
+        </div>
+        <div class="hero-stats">
+          <div>
+            <div class="hero-stat-num">7</div>
+            <div class="hero-stat-label">调研工作</div>
+          </div>
+          <div>
+            <div class="hero-stat-num">4</div>
+            <div class="hero-stat-label">LLM 自动生成方法</div>
+          </div>
+          <div>
+            <div class="hero-stat-num">3</div>
+            <div class="hero-stat-label">可直接复用 Prompt</div>
+          </div>
+          <div>
+            <div class="hero-stat-num">R2R</div>
+            <div class="hero-stat-label">推荐对齐风格</div>
+          </div>
+        </div>
+      </div>
+
+      <h2><span class="section-icon"></span>核心结论</h2>
+
+      <div class="callout callout-success">
+        <div class="callout-icon">✓</div>
+        <div class="callout-content">
+          <strong>对齐 R2R 风格是正确决定。</strong>几乎所有近年 SOTA(BEVBert, ETPNav, ScaleVLN, NaviLLM, DUET, VLN-BERT…)的训练范式、loss、agent 架构、tokenizer 词表都是为 <strong>短中程 R2R-style 单段指令</strong>设计。把 R2R 模型直接放到 LH-VLN 上实测 SR = 0%,完全跑不动 — 兼容性验证落实在数据上。
+        </div>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-icon">★</div>
+        <div class="callout-content">
+          <strong>最值得参考的工作:</strong> ① <strong>HA-R2R</strong>(LLM 自动改写 R2R-style,prompt 直接可复用) ② <strong>VLN-CE</strong>(连续空间动作设计与 episode JSON schema) ③ <strong>RoomTour3D</strong>(多模型 caption pipeline) ④ <strong>C-Instructor</strong>(CoTL 思想 — 先抽 landmark 再生成)。
+        </div>
+      </div>
+
+      <h2><span class="section-icon"></span>七个工作快速浏览</h2>
+      <p>点击卡片跳转到对应详情页。</p>
+
+      <div class="overview-grid">
+        <button class="overview-card" data-target="r2r">
+          <div class="overview-card-head">
+            <div class="overview-card-name">R2R</div>
+            <span class="tag tag-blue">必须对齐</span>
+          </div>
+          <div class="overview-card-desc">VLN 鼻祖。短、纯祈使句、地标点名,平均 29 词。所有 SOTA 的训练范式来源。</div>
+          <div class="overview-card-meta">
+            <span>CVPR 2018</span><span>Anderson et al.</span>
+          </div>
+        </button>
+
+        <button class="overview-card" data-target="rxr">
+          <div class="overview-card-head">
+            <div class="overview-card-name">RxR</div>
+            <span class="tag tag-blue">扩展参考</span>
+          </div>
+          <div class="overview-card-desc">多语言、密集地标。第二人称连续叙述,平均 78 词。包含 timestamp + pose 对齐。</div>
+          <div class="overview-card-meta">
+            <span>EMNLP 2020</span><span>Ku et al.</span>
+          </div>
+        </button>
+
+        <button class="overview-card" data-target="vlnce">
+          <div class="overview-card-head">
+            <div class="overview-card-name">VLN-CE</div>
+            <span class="tag tag-blue">轨迹参考</span>
+          </div>
+          <div class="overview-card-desc">把 R2R/RxR 从 nav-graph 移植到 Habitat 连续 mesh。我们的轨迹设计直接参考它。</div>
+          <div class="overview-card-meta">
+            <span>ECCV 2020</span><span>Krantz et al.</span>
+          </div>
+        </button>
+
+        <button class="overview-card" data-target="havln">
+          <div class="overview-card-head">
+            <div class="overview-card-name">HA-VLN 2.0 / HA-R2R</div>
+            <span class="tag tag-green">★ Prompt 直接复用</span>
+          </div>
+          <div class="overview-card-desc">用 GPT-4o + LLaMA-3 在 R2R-CE 基础上增强,加入人体活动描述。完整 prompt 公开。</div>
+          <div class="overview-card-meta">
+            <span>2025</span><span>Dong et al.</span>
+          </div>
+        </button>
+
+        <button class="overview-card" data-target="roomtour">
+          <div class="overview-card-head">
+            <div class="overview-card-name">RoomTour3D</div>
+            <span class="tag tag-green">Pipeline 参考</span>
+          </div>
+          <div class="overview-card-desc">从 YouTube 房产视频 + 多模型 caption + GPT-4 全自动生成。100K 轨迹 + 200K 指令。</div>
+          <div class="overview-card-meta">
+            <span>CVPR 2025</span><span>Han et al.</span>
+          </div>
+        </button>
+
+        <button class="overview-card" data-target="cinst">
+          <div class="overview-card-head">
+            <div class="overview-card-name">C-Instructor</div>
+            <span class="tag tag-green">思想可借鉴</span>
+          </div>
+          <div class="overview-card-desc">基于 LLaMA-7B 训练的可控 generator。CoTL 思想:先抽 landmark,再生成完整指令。</div>
+          <div class="overview-card-meta">
+            <span>ECCV 2024</span><span>Kong et al.</span>
+          </div>
+        </button>
+
+        <button class="overview-card" data-target="lhvln">
+          <div class="overview-card-head">
+            <div class="overview-card-name">LH-VLN / LHPR-VLN</div>
+            <span class="tag tag-orange">不对齐(反例)</span>
+          </div>
+          <div class="overview-card-desc">长程多阶段任务式("拿 X 到 Y,然后…")。SOTA 在它上面 SR=0%,正是为什么我们不对齐它。</div>
+          <div class="overview-card-meta">
+            <span>CVPR 2025</span><span>Song et al.</span>
+          </div>
+        </button>
+      </div>
+
+      <h2><span class="section-icon"></span>横向对比表</h2>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>工作</th>
+              <th>指令风格</th>
+              <th>平均词数</th>
+              <th>指令粒度</th>
+              <th>场景表示</th>
+              <th>场景数</th>
+              <th>轨迹规模</th>
+              <th>动作空间</th>
+              <th>生成方式</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>R2R</strong></td>
+              <td>祈使句、地标点名</td>
+              <td>29</td>
+              <td>单段</td>
+              <td>MP3D nav-graph</td>
+              <td>90</td>
+              <td>7,189 paths × 3 = 21.5K</td>
+              <td>离散 nav-graph + 6 动作</td>
+              <td>100% 人工 (AMT)</td>
+            </tr>
+            <tr>
+              <td><strong>RxR</strong></td>
+              <td>第二人称、密集地标</td>
+              <td>78 (en-US: 129)</td>
+              <td>单段长叙事</td>
+              <td>MP3D nav-graph</td>
+              <td>90</td>
+              <td>16.5K paths × 9 = 126K</td>
+              <td>同 R2R</td>
+              <td>100% 人工 (语音→自转写)</td>
+            </tr>
+            <tr>
+              <td><strong>VLN-CE</strong></td>
+              <td>复用 R2R / RxR</td>
+              <td>29 / 78</td>
+              <td>同上</td>
+              <td>Habitat 连续 mesh</td>
+              <td>90</td>
+              <td>沿用 R2R 子集</td>
+              <td><strong>FORWARD 0.25m, TURN ±15°, STOP</strong></td>
+              <td>不生成,继承</td>
+            </tr>
+            <tr>
+              <td><strong>HA-R2R</strong></td>
+              <td>R2R + 人体活动</td>
+              <td>~80–100+</td>
+              <td>单段(start/during/end)</td>
+              <td>MP3D + SMPL 动态人</td>
+              <td>90</td>
+              <td>16,844 instr</td>
+              <td>同 VLN-CE + 碰撞检测</td>
+              <td><strong>GPT-4o + LLaMA-3 (few-shot)</strong></td>
+            </tr>
+            <tr>
+              <td><strong>RoomTour3D</strong></td>
+              <td>open-vocab 物体进展</td>
+              <td>~50–80</td>
+              <td>单段 open-ended</td>
+              <td>YouTube 视频 + COLMAP</td>
+              <td><strong>1,847</strong></td>
+              <td>100K traj + 200K instr</td>
+              <td>Frame-as-action</td>
+              <td><strong>GPT-4-Turbo (多模型 caption)</strong></td>
+            </tr>
+            <tr>
+              <td><strong>C-Instructor</strong></td>
+              <td>可控:R2R/REVERIE</td>
+              <td>~29 (R2R)</td>
+              <td>单段(landmark first)</td>
+              <td>沿用 R2R/REVERIE</td>
+              <td>90</td>
+              <td>不创建</td>
+              <td>同 R2R</td>
+              <td><strong>LLaMA-7B 自训(CoTL)</strong></td>
+            </tr>
+            <tr>
+              <td><strong>LH-VLN</strong></td>
+              <td>高层"X 到 Y, then…"</td>
+              <td>18.17</td>
+              <td><strong>多阶段(2-4 sub)</strong></td>
+              <td>HM3D Habitat</td>
+              <td><strong>216</strong></td>
+              <td>3,260 tasks, ~150 步/任务</td>
+              <td>FORWARD 0.25m, TURN ±30°, STOP</td>
+              <td><strong>GPT-4 双向(forward + backward)</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2><span class="section-icon"></span>风格直观对比</h2>
+      <p>每种风格用一句中文片段感受差异:</p>
+
+      <div class="style-compare">
+        <div class="style-compare-name">R2R · 短、祈使句、地标点名</div>
+        <div class="style-compare-summary">所有 SOTA 模型的训练目标。我们要复制的"模板"。</div>
+        <div class="style-compare-example">"上楼,经过钢琴,在鹿角旁等待。"</div>
+      </div>
+
+      <div class="style-compare">
+        <div class="style-compare-name">RxR · 第二人称、密集地标 + 状态确认</div>
+        <div class="style-compare-summary">长且口语化,适合做 fine-grained 对齐。</div>
+        <div class="style-compare-example">"现在你正站在一扇关着的门前,向左转,你可以看到两级木台阶……"</div>
+      </div>
+
+      <div class="style-compare">
+        <div class="style-compare-name">HA-R2R · R2R 风格 + 人体活动 + 社会感知</div>
+        <div class="style-compare-summary">在 R2R 基础上叠加,保留兼容性。</div>
+        <div class="style-compare-example">"继续向前走,确保不要打扰他的寻找……注意不要撞到他们。"</div>
+      </div>
+
+      <div class="style-compare">
+        <div class="style-compare-name">RoomTour3D · 物体进展叙述 + R2R 动作骨架</div>
+        <div class="style-compare-summary">来自房产视频的"摄影解说"风格。</div>
+        <div class="style-compare-example">"穿过走廊向前走,经过墙上的一幅画,从远处床、窗帘和台灯的视角开始……"</div>
+      </div>
+
+      <div class="style-compare">
+        <div class="style-compare-name">LH-VLN · 高层目标、多阶段、"……,然后……"</div>
+        <div class="style-compare-summary">语气与 R2R 完全不同,这是为什么我们不对齐它。</div>
+        <div class="style-compare-example">"把浴室里的毛巾拿到厨房中岛,然后抓起茶壶放到客厅茶几上。"</div>
+      </div>
+
+      <h2><span class="section-icon"></span>给我们项目的建议</h2>
+
+      <div class="card">
+        <h3 style="margin-top:0">指令风格层面</h3>
+        <ol>
+          <li><strong>主对齐 R2R</strong>:25–35 词、纯祈使句、以 stop/wait 收尾、每句一个具体地标。</li>
+          <li><strong>Prompt 直接复用 HA-R2R 的 system + few-shot 模板</strong>(详见"推荐 Prompt 方案"页)。</li>
+          <li><strong>引入 C-Instructor 的 CoTL 思想</strong>:先用 LLM 抽 landmark list,再 conditioned 生成 R2R-style 指令。我们 3DGS 已有 bbox,等于自动获得 ground-truth landmark。</li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0">GT 轨迹层面</h3>
+        <ol>
+          <li><strong>动作空间直接抄 VLN-CE</strong>:<code>FORWARD 0.25m</code> + <code>TURN ±15°</code> + <code>STOP</code>;成功半径 <strong>3.0m</strong>。</li>
+          <li><strong>采样规则参考 R2R</strong>:不同 region 之间的 start/goal,navmesh 最短路径,过滤 &lt;5m,4–6 段 edges(转化为"经过 4–6 个房间")。</li>
+          <li><strong>Episode JSON schema 用 VLN-CE 的</strong>:Habitat 兼容,所有 SOTA 都能加载。</li>
+        </ol>
+      </div>
+
+      <h2><span class="section-icon"></span>本调研涉及的论文与资源</h2>
+      <div class="info-grid">
+        <div class="info-row">
+          <span class="info-label">R2R</span>
+          <span class="info-value">arXiv:1711.07280 · CVPR 2018</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">RxR</span>
+          <span class="info-value">EMNLP 2020 · Google Research</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">VLN-CE</span>
+          <span class="info-value">ECCV 2020</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">HA-VLN 2.0</span>
+          <span class="info-value">arXiv:2503.14229</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">RoomTour3D</span>
+          <span class="info-value">arXiv:2412.08591 · CVPR 2025</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">C-Instructor</span>
+          <span class="info-value">arXiv:2407.07433 · ECCV 2024</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">LH-VLN</span>
+          <span class="info-value">arXiv:2412.09082 · CVPR 2025</span>
+        </div>
+      </div>
+
+      <div class="footnote">
+        所有 instruction 样例均直接引用论文原文 / 官方代码仓库的 README,不做改写。中文翻译用于阅读对照。
+      </div>
+    </section>
+
+    <!-- ============= PAGE: R2R ============= -->
+    <section class="page" id="page-r2r">
+      <div class="page-meta">经典基准 · 01</div>
+      <h1>R2R · Room-to-Room</h1>
+      <p class="page-subtitle">VLN 任务的开山之作。我们要对齐的"模板"风格就是它。</p>
+
+      <div class="tag-row">
+        <span class="tag tag-gray">CVPR 2018</span>
+        <span class="tag tag-gray">Anderson et al.</span>
+        <span class="tag tag-blue">必须对齐</span>
+        <span class="tag tag-gray">arXiv:1711.07280</span>
+      </div>
+
+      <h2><span class="section-icon"></span>指令实例</h2>
+      <p>下面 4 条均为论文 Figure 1 与 Figure 4 的<strong>原文样例</strong>。每条提供英文原文 + 中文翻译。</p>
+
+      <h4>样例 1 · Figure 1 经典展示</h4>
+      <blockquote class="original">
+        <div class="quote-label">英文原文</div>
+        Head upstairs and walk past the piano through an archway directly in front. Turn right when the hallway ends at pictures and table. Wait by the moose antlers hanging on the wall.
+      </blockquote>
+      <blockquote class="translation">
+        <div class="quote-label">中文翻译</div>
+        上楼,经过钢琴,穿过正前方的拱门。当走廊在挂着画和摆着桌子的地方走到尽头时,向右转。在挂在墙上的鹿角旁边等待。
+      </blockquote>
+
+      <h4>样例 2 · 浴室场景</h4>
+      <blockquote class="original">
+        <div class="quote-label">英文原文</div>
+        Walk straight passed bathtub and stop with closet on the left and toilet on the right.
+      </blockquote>
+      <blockquote class="translation">
+        <div class="quote-label">中文翻译</div>
+        径直走过浴缸,停下来,这时衣柜在你左边,马桶在你右边。
+      </blockquote>
+
+      <h4>样例 3 · 户外到室内</h4>
+      <blockquote class="original">
+        <div class="quote-label">英文原文</div>
+        Pass the pool and go indoors using the double glass doors. Pass the large table with chairs and turn left and wait by the wine bottles that have grapes by them.
+      </blockquote>
+      <blockquote class="translation">
+        <div class="quote-label">中文翻译</div>
+        经过游泳池,通过双扇玻璃门进入室内。经过那张配椅子的大桌子,向左转,然后在旁边放着葡萄的酒瓶旁等待。
+      </blockquote>
+
+      <h4>样例 4 · 办公室场景</h4>
+      <blockquote class="original">
+        <div class="quote-label">英文原文</div>
+        Exit the office then turn left and then turn left in the hallway and head down the hallway until you get to a door on your left and go into office 359 then stop.
+      </blockquote>
+      <blockquote class="translation">
+        <div class="quote-label">中文翻译</div>
+        走出办公室,向左转,然后在走廊里再次向左转,沿着走廊往前走,直到看到左手边的一扇门,走进 359 号办公室然后停下。
+      </blockquote>
+
+      <h2><span class="section-icon"></span>风格特点总结</h2>
+
+      <div class="info-grid">
+        <div class="info-row">
+          <span class="info-label">平均长度</span>
+          <span class="info-value">29 词(论文明确数字)</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">词表大小</span>
+          <span class="info-value">~3.1k 词;~1.2k 高频词</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">句式</span>
+          <span class="info-value">纯祈使句、无人称主语</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">指令粒度</span>
+          <span class="info-value">单段(隐含 3-5 sub-instruction)</span>
+        </div>
+      </div>
+
+      <h3>典型动词模式</h3>
+      <p><code>walk past / through / down</code>、<code>turn left/right</code>、<code>go up/down</code>、<code>pass the X</code>、<code>exit / enter</code>、<code>stop at / wait by / wait next to</code>、<code>head + 方向</code></p>
+
+      <h3>地标描述方式</h3>
+      <p><strong>明确点名物体</strong>(piano, archway, moose antlers, bathtub, double glass doors, wine bottles, office 359),通常作为 turning point 或 stopping point。每句必含一个具体地标作参照。</p>
+
+      <h2><span class="section-icon"></span>GT 轨迹设计</h2>
+
+      <div class="info-grid">
+        <div class="info-row">
+          <span class="info-label">场景来源</span>
+          <span class="info-value">Matterport3D (MP3D)</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">场景数量</span>
+          <span class="info-value">90 (61 train / 11 val unseen / 18 test)</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">轨迹数</span>
+          <span class="info-value">7,189 paths · 21,567 instructions</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">平均路径</span>
+          <span class="info-value">10m, 4-6 edges</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">起点/终点策略</span>
+          <span class="info-value">不同 room 自动采样 + 最短路径</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">动作空间</span>
+          <span class="info-value">离散 nav-graph(平均 degree 4.1)</span>
+        </div>
+      </div>
+
+      <h3>JSON 数据格式(官方 R2R README)</h3>
+      <pre><code>{
+  "distance": float,           // path 距离 (米)
+  "scan": str,                 // MP3D 场景 ID
+  "path_id": int,              // 路径唯一 ID
+  "path": [str, str, ...],     // viewpoint ID 序列
+  "heading": float,            // 起始 heading (radians)
+  "instructions": [str, str, str]   // 3 条 human instructions
+}</code></pre>
+
+      <h2><span class="section-icon"></span>如何生成 instruction</h2>
+
+      <div class="callout callout-info">
+        <div class="callout-icon">i</div>
+        <div class="callout-content">
+          <strong>R2R 是 100% 人工标注</strong>,使用 Amazon Mechanical Turk(AMT)。无 LLM 参与。我们项目无法照搬,但需要它的"风格"。
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0">人工标注流程</h3>
+        <div class="flow-step"><span class="flow-num">1</span>workers 在 WebGL 3D viewer 中以 fly-through 方式浏览路径</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">2</span>可在任意 viewpoint pan / tilt 相机查看上下文</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">3</span>写下"指挥智能机器人到达终点"的指令</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">4</span>每条路径采集 3 条独立的 instructions</div>
+        <h4>关键参数</h4>
+        <ul>
+          <li>400+ US-based AMT workers</li>
+          <li>~1,600 总标注小时</li>
+          <li>预筛选 worker 历史质量</li>
+          <li><strong>无自动验证机制</strong>,仅靠每路径 3 条提供多样性</li>
+        </ul>
+      </div>
+
+      <div class="footnote">
+        论文中关键引用:"…22k instructions are available, with an average length of 29 words."
+      </div>
+    </section>
+
+    <!-- ============= PAGE: RxR ============= -->
+    <section class="page" id="page-rxr">
+      <div class="page-meta">经典基准 · 02</div>
+      <h1>RxR · Room-Across-Room</h1>
+      <p class="page-subtitle">R2R 的多语言扩展。更长、更密集地标、与 pose 时间对齐。</p>
+
+      <div class="tag-row">
+        <span class="tag tag-gray">EMNLP 2020</span>
+        <span class="tag tag-gray">Google Research</span>
+        <span class="tag tag-blue">扩展参考</span>
+      </div>
+
+      <h2><span class="section-icon"></span>指令实例</h2>
+
+      <h4>样例 1 · 健身房完整长指令(en-US,Figure 4)</h4>
+      <blockquote class="original">
+        <div class="quote-label">英文原文</div>
+        Now you are standing in-front of a closed door, turn to your left, you can see two wooden steps, climb the steps and walk forward by crossing a wall painting which is to your right side, you can see open door enter into it. This is a gym room, move forward, walk till the end of the room, you can see a grey colored ball to the corner of the room, stand there, that's your end point.
+      </blockquote>
+      <blockquote class="translation">
+        <div class="quote-label">中文翻译</div>
+        现在你正站在一扇关着的门前,向左转,你可以看到两级木台阶,登上台阶向前走,经过一幅墙画(它在你的右手边),你可以看到一扇敞开的门,走进去。这是一个健身房,向前走,一直走到房间的尽头,你可以看到房间角落里有一个灰色的球,就站在那里,那就是你的终点。
+      </blockquote>
+
+      <h4>样例 2 · Allocentric 关系(Table 3 节选)</h4>
+      <blockquote class="original">
+        <div class="quote-label">英文原文</div>
+        ...veer to the left of the fireplace and you will...
+      </blockquote>
+      <blockquote class="translation">
+        <div class="quote-label">中文翻译</div>
+        ……朝壁炉的左侧偏转,然后你会……
+      </blockquote>
+
+      <h4>样例 3 · Comparison(Table 3 节选)</h4>
+      <blockquote class="original">
+        <div class="quote-label">英文原文</div>
+        ...the large archway with the smaller archway in...
+      </blockquote>
+      <blockquote class="translation">
+        <div class="quote-label">中文翻译</div>
+        ……那个大拱门连着里面的小拱门……
+      </blockquote>
+
+      <h4>样例 4 · Temporal Condition(Table 3 节选)</h4>
+      <blockquote class="original">
+        <div class="quote-label">英文原文</div>
+        Move around the island until you come to the...
+      </blockquote>
+      <blockquote class="translation">
+        <div class="quote-label">中文翻译</div>
+        绕着中岛走,直到你来到……
+      </blockquote>
+
+      <h2><span class="section-icon"></span>风格特点总结</h2>
+
+      <div class="info-grid">
+        <div class="info-row">
+          <span class="info-label">平均长度</span>
+          <span class="info-value">78 词(en-US 子集 129 词)</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">规模</span>
+          <span class="info-value">126K instructions × 3 语种</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">句式</span>
+          <span class="info-value">第二人称(you)+ 大量祈使</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">地标密度</span>
+          <span class="info-value">每条 6-8 次 entity reference(R2R 是 3.7)</span>
+        </div>
+      </div>
+
+      <h3>独特特征</h3>
+      <ul>
+        <li><strong>State verification</strong>:出现"you are in the balcony area facing towards…"这种状态确认句</li>
+        <li><strong>Allocentric relations 高</strong>:物体之间相对关系密集(20% → 68-92%)</li>
+        <li><strong>Coreference 多</strong>:24-76% 的句子有指代回指</li>
+        <li><strong>Timestamp + pose 对齐</strong>:每个词都有起始与结束时间戳,与 6-DoF camera pose 同步</li>
+      </ul>
+
+      <h2><span class="section-icon"></span>GT 轨迹设计</h2>
+
+      <div class="info-grid">
+        <div class="info-row">
+          <span class="info-label">场景来源</span>
+          <span class="info-value">同 R2R(MP3D 90 scenes)</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">轨迹数</span>
+          <span class="info-value">16,522 paths(R2R 的 2.3 倍)</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">平均长度</span>
+          <span class="info-value">14.9m, 8 edges</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">非最短路径</span>
+          <span class="info-value">44.5%(刻意打破 R2R 偏置)</span>
+        </div>
+      </div>
+
+      <h3>两级路径采样(创新点)</h3>
+      <div class="card">
+        <div class="flow-step"><span class="flow-num">1</span><strong>Room graph 层</strong>:采样 simple room paths(≤5 rooms, ≤2 floors)</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">2</span><strong>Panorama 层</strong>:在子图内跑最短路径</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">3</span><strong>Greedy selection</strong>:保证 panorama 覆盖均匀,反偏置</div>
+      </div>
+
+      <p><strong>四大设计目标</strong>(论文 path desiderata):①路径长度高方差 ②允许间接接近终点 ③自然性(不绕圈) ④均匀环境覆盖。</p>
+
+      <h2><span class="section-icon"></span>如何生成 instruction</h2>
+
+      <div class="callout callout-info">
+        <div class="callout-icon">i</div>
+        <div class="callout-content">
+          <strong>RxR 是 100% 人工标注 + 语音录制 + 自转写</strong>,但有完善的<strong>双重验证机制</strong>(Guide-Follower)。我们的项目可以借鉴它的"质量验证流水线"思想。
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0">Guide-Follower 双任务流程</h3>
+        <div class="flow-step"><span class="flow-num">1</span><strong>Guide 任务</strong>:annotator 看路径,<strong>说出</strong>导航指令(不是写),tool 录音 + 同步记录 6-DoF camera pose</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">2</span><strong>自转写</strong>:Guide 自己转写自己的录音 → 高质量文本</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">3</span><strong>对齐</strong>:ASR + dynamic time warping → 每词与 pose 时间对齐</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">4</span><strong>Follower 任务</strong>:另一 annotator 听音频走路径;若失败,Guide 重做</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">5</span><strong>Human follower 成功率 93.9%</strong> → 数据质量验证</div>
+      </div>
+
+      <div class="footnote">
+        Guide 任务平均 458 秒/条,Follower 平均 132 秒/条。三种语言:英、印地、泰卢固(各 14K paths × 3 instr)。
+      </div>
+    </section>
+
+    <!-- ============= PAGE: VLN-CE ============= -->
+    <section class="page" id="page-vlnce">
+      <div class="page-meta">经典基准 · 03</div>
+      <h1>VLN-CE · Vision-and-Language Navigation in Continuous Environments</h1>
+      <p class="page-subtitle">把 R2R/RxR 从离散 nav-graph 移植到 Habitat 连续 mesh。我们 3DGS 项目轨迹设计的直接参考。</p>
+
+      <div class="tag-row">
+        <span class="tag tag-gray">ECCV 2020</span>
+        <span class="tag tag-gray">Krantz et al.</span>
+        <span class="tag tag-blue">轨迹参考</span>
+      </div>
+
+      <h2><span class="section-icon"></span>指令实例</h2>
+
+      <div class="callout callout-info">
+        <div class="callout-icon">i</div>
+        <div class="callout-content">
+          VLN-CE <strong>不创建新的 instruction 语料</strong>,而是复用 R2R 和 RxR 的指令文本。所以指令风格、长度、句式完全等同于 R2R 或 RxR。<br>
+          → 样例请参考 <strong>R2R 页面</strong>(R2R-CE)或 <strong>RxR 页面</strong>(RxR-CE)。
+        </div>
+      </div>
+
+      <h2><span class="section-icon"></span>真正的贡献:连续空间</h2>
+
+      <p>VLN-CE 论文真正的贡献在于<strong>把 nav-graph 离散任务变成连续 3D mesh 任务</strong>,这正是我们 3DGS 项目要做的事。</p>
+
+      <div class="info-grid">
+        <div class="info-row">
+          <span class="info-label">场景表示</span>
+          <span class="info-value">Habitat 连续 mesh(基于 MP3D)</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">场景数量</span>
+          <span class="info-value">90(同 R2R)</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">动作空间</span>
+          <span class="info-value">低层离散动作集</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">成功半径</span>
+          <span class="info-value">3.0m(v1-3 标准)</span>
+        </div>
+      </div>
+
+      <h3>动作空间(★ 核心可复用)</h3>
+      <div class="card">
+        <ul style="margin: 0;">
+          <li><code>MOVE-FORWARD 0.25m</code> — 前进 0.25 米</li>
+          <li><code>TURN-LEFT 15°</code> — 左转 15 度</li>
+          <li><code>TURN-RIGHT 15°</code> — 右转 15 度</li>
+          <li><code>STOP</code> — 停止(必须由 agent 主动选择)</li>
+        </ul>
+        <p style="margin-top:12px;"><strong>专家轨迹动作分布</strong>(论文原文):68% forward, 15% turn-left, 15% turn-right, 2% stop。</p>
+      </div>
+
+      <h2><span class="section-icon"></span>GT 轨迹设计</h2>
+
+      <h3>从 nav-graph 移植的过程</h3>
+      <div class="card">
+        <div class="flow-step"><span class="flow-num">1</span>读取 R2R 原始 nav-graph 的 viewpoint 序列</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">2</span>把每个 viewpoint 的 (x, y, z) 坐标对应到 Habitat mesh</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">3</span>用 navmesh shortest-path 连接相邻 viewpoint,得到连续 reference path</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">4</span>过滤 mesh 重建有缺陷、navmesh 不可达的 episode</div>
+      </div>
+
+      <h3>JSON Episode 格式(★ 我们项目应直接复用)</h3>
+      <pre><code>{
+  "episode_id": int,
+  "scene_id": str,           // .glb 路径
+  "trajectory_id": int,
+  "start_position": [x, y, z],
+  "start_rotation": [qx, qy, qz, qw],
+  "instruction": {
+    "instruction_text": str,
+    "instruction_tokens": [int, ...]
+  },
+  "goals": [{"position": [x, y, z], "radius": 3.0}],
+  "reference_path": [[x, y, z], ...],   // 连续 waypoints
+  "info": {"geodesic_distance": float}
+}</code></pre>
+
+      <h2><span class="section-icon"></span>如何生成 instruction</h2>
+
+      <div class="callout callout-info">
+        <div class="callout-icon">i</div>
+        <div class="callout-content">
+          VLN-CE 的 instructions <strong>完全继承自 R2R / RxR 的人工标注</strong>,论文不专门生成新语料。可借鉴的是它的 <strong>episode 格式与动作空间</strong>。
+        </div>
+      </div>
+
+      <h2><span class="section-icon"></span>给我们项目的关键启发</h2>
+
+      <div class="callout callout-success">
+        <div class="callout-icon">✓</div>
+        <div class="callout-content">
+          <strong>所有数字直接照搬到 3DGS 项目:</strong>
+          <ul style="margin: 8px 0 0 20px;">
+            <li>动作步长:0.25m / 15°(标准)</li>
+            <li>成功半径:3.0m</li>
+            <li>路径长度过滤:&gt; 5m</li>
+            <li>Episode JSON 用上面这套 schema</li>
+            <li>SOTA 模型(BEVBert, ETPNav, ScaleVLN…)就能 zero-shot 加载</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= PAGE: HA-VLN ============= -->
+    <section class="page" id="page-havln">
+      <div class="page-meta">新工作 · 04 · ★ Prompt 直接可复用</div>
+      <h1>HA-VLN 2.0 / HA-R2R</h1>
+      <p class="page-subtitle">在 R2R-CE 基础上用 LLM 增强,加入人体活动 + 社会感知。<strong>完整 prompt 公开,可直接复用。</strong></p>
+
+      <div class="tag-row">
+        <span class="tag tag-gray">2025</span>
+        <span class="tag tag-gray">Dong et al.</span>
+        <span class="tag tag-green">★ Prompt 复用</span>
+        <span class="tag tag-gray">arXiv:2503.14229</span>
+      </div>
+
+      <h2><span class="section-icon"></span>指令实例</h2>
+
+      <h4>样例 1 · 多人场景(GitHub README)</h4>
+      <blockquote class="original">
+        <div class="quote-label">英文原文</div>
+        Exit the library and turn left. As you proceed straight ahead, you will enter the bedroom, where you can observe a person actively searching for a lost item, perhaps checking under the bed or inside drawers. Continue moving forward, ensuring you do not disturb his search. As you pass by, you might see a family engaged in a casual conversation on the porch or terrace, be careful not to bump into them. Maintain your course until you reach the closet. Stop just outside the closet and await further instructions.
+      </blockquote>
+      <blockquote class="translation">
+        <div class="quote-label">中文翻译</div>
+        走出图书馆然后向左转。当你径直向前走时,你会进入卧室,在那里你可以看到一个人正在积极地寻找丢失的物品,可能正在床下或抽屉里翻找。继续向前走,确保不要打扰他的寻找。当你经过时,你可能会看到一家人正在门廊或露台上随意交谈,注意不要撞到他们。保持你的路线,直到你到达衣柜。就在衣柜外面停下,等待进一步的指示。
+      </blockquote>
+
+      <h4>样例 2 · 餐厅 + 办公室(GitHub README)</h4>
+      <blockquote class="original">
+        <div class="quote-label">英文原文</div>
+        Begin your path on the left side of the dining room, where a group of friends is gathered around a table, enjoying dinner and exchanging stories with laughter. As you move across this area, be cautious not to disturb their gathering. The dining room features a large table and chairs. Proceed through the doorway that leads out of the dining room. Upon entering the hallway, continue straight and then make a left turn. ... Continue down the hallway until you reach the entrance of the office. Here, you will observe a person engaged in taking photographs, likely focusing on capturing the view from a window or an interesting aspect of the room. Stop at this point, ensuring you are positioned at the entrance without obstructing the photographer's activity.
+      </blockquote>
+      <blockquote class="translation">
+        <div class="quote-label">中文翻译</div>
+        从餐厅的左侧开始你的路径,那里有一群朋友围坐在桌旁,一边享用晚餐一边谈笑风生地交换故事。当你穿过这个区域时,要小心不要打扰他们的聚会。餐厅里有一张大桌子和几把椅子。穿过通向餐厅外的门口。进入走廊后,继续直走,然后向左转。……继续沿着走廊往前走,直到你到达办公室的入口。在这里,你会看到一个人正在拍照……在这一点停下,确保你站在入口处,但不要妨碍这位摄影者的活动。
+      </blockquote>
+
+      <h4>样例 3 · 无人场景(GitHub README 例 4)</h4>
+      <blockquote class="original">
+        <div class="quote-label">英文原文</div>
+        Begin by leaving the room and turning to your right. Proceed down the hallway, be careful of any human activity or objects along the way. As you continue, look for the first doorway on your right. Enter through this doorway and advance towards the shelves. Once you reach the vicinity of the shelves, come to a halt and wait there. During this movement, avoid any obstacles or disruptions in the environment.
+      </blockquote>
+      <blockquote class="translation">
+        <div class="quote-label">中文翻译</div>
+        首先离开房间并向右转。沿着走廊往前走,沿途注意任何人类活动或物体。继续往前走,寻找右手边的第一扇门。穿过这扇门进入,朝着架子前进。一旦你到达架子附近,停下来在那里等待。在这一移动过程中,避开环境中的任何障碍物或干扰。
+      </blockquote>
+
+      <h2><span class="section-icon"></span>风格特点总结</h2>
+
+      <div class="info-grid">
+        <div class="info-row">
+          <span class="info-label">平均长度</span>
+          <span class="info-value">~80–100+ 词(显著长于 R2R)</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">规模</span>
+          <span class="info-value">16,844 instructions</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">句式</span>
+          <span class="info-value">第二人称(you)+ 描述性祈使</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">指令粒度</span>
+          <span class="info-value">单段(start/during/end 三段拼)</span>
+        </div>
+      </div>
+
+      <h3>核心创新:R2R 风格 + 社会感知短语</h3>
+      <p>R2R 核心动词(exit, turn, proceed, pass, enter, stop)<strong>全部保留</strong>,额外添加:</p>
+      <ul>
+        <li><code>do not disturb</code>(不要打扰)</li>
+        <li><code>be cautious / be careful not to</code>(小心不要)</li>
+        <li><code>without obstructing / without interfering</code>(不要妨碍/干扰)</li>
+        <li><code>maintain a steady course</code>(保持稳定路线)</li>
+        <li><code>avoid any obstacles</code>(避开任何障碍)</li>
+      </ul>
+
+      <h2><span class="section-icon"></span>GT 轨迹设计</h2>
+
+      <div class="info-grid">
+        <div class="info-row">
+          <span class="info-label">场景来源</span>
+          <span class="info-value">MP3D 90 scenes + SMPL 人体(HAPS 2.0)</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">人体模型</span>
+          <span class="info-value">486 motion sequences,910 humans</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">轨迹策略</span>
+          <span class="info-value">直接复用 R2R-CE,只增强指令</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">动作空间</span>
+          <span class="info-value">同 VLN-CE + 碰撞检测</span>
+        </div>
+      </div>
+
+      <h2><span class="section-icon"></span>如何生成 instruction(★ 核心)</h2>
+
+      <p><strong>方法</strong>:GPT-4o + LLaMA-3-8B-Instruct,few-shot prompting,在 R2R-CE 原始指令基础上做"上下文增强"。</p>
+
+      <h3>System Prompt(完整原文 + 翻译)</h3>
+
+      <blockquote class="original">
+        <div class="quote-label">英文原文</div>
+        You are tasked with generating an objective and detailed description of a path and the related scene information based on the given input. Focus solely on observable entities and actions in the scene, avoiding descriptions of smell, atmosphere, or subjective feelings. Ensure clarity and precision in object and human activity descriptions.
+      </blockquote>
+      <blockquote class="translation">
+        <div class="quote-label">中文翻译</div>
+        你的任务是基于给定的输入,生成一段关于路径以及相关场景信息的客观、详细的描述。<strong>只关注场景中可观察到的实体和动作</strong>,<strong>避免描述气味、氛围或主观感受</strong>。确保物体和人类活动描述的清晰性和精确性。
+      </blockquote>
+
+      <h3>User Prompt(完整原文 + 翻译)</h3>
+
+      <pre><code>Input:
+[instruction_text]: "..."
+[start]: "..."
+[during]: "..."
+[end]: "..."
+
+Please provide an objective, step-by-step description of the path,
+focusing on the objects and human activities observed at each stage
+of the navigation (beginning, during, and end). Expand your description
+by including character actions, objective descriptions of objects, and
+details of the movement process. Your description should maintain
+a neutral tone and avoid embellishments. Please simulate the robot's
+movement along the path, while incorporating possible connections
+or interactions between the robot, objects, and human activities.
+
+Output: ...</code></pre>
+
+      <pre><code>输入:
+[原始指令]: "……"
+[起点场景]: "……"
+[路径中场景]: "……"
+[终点场景]: "……"
+
+请提供一段关于这条路径的客观的、按步骤的描述,关注在导航的每个阶段
+(开始、过程中、结束)所观察到的物体和人类活动。
+通过包含人物动作、物体的客观描述以及移动过程的细节来扩展你的描述。
+你的描述应保持中性的语气并避免修饰性的辞藻。
+请模拟机器人沿路径移动的过程,同时融入机器人、物体和人类活动
+之间可能的关联或互动。
+
+输出:……</code></pre>
+
+      <h3>Few-shot Example(完整原文 + 翻译)</h3>
+
+      <h4>输入(原始 R2R-CE 指令)</h4>
+      <blockquote class="original">
+        <div class="quote-label">英文原文</div>
+        instruction_text: "Go through the doorway to the hall. Go down the hall past the landing. Take the first door on the right and stop in the doorway."<br>
+        start: "other room: A person using the room for a quiet phone call."<br>
+        during: "other room: A person using the room for a quiet phone call."<br>
+        end: "hallway: An individual cleaning or vacuuming."
+      </blockquote>
+      <blockquote class="translation">
+        <div class="quote-label">中文翻译</div>
+        原始指令:"穿过门口进入走廊。沿着走廊走过楼梯平台。从右边第一扇门进去,在门口停下。"<br>
+        起点场景:其他房间 — 一个人正在房间里安静地打电话。<br>
+        路径中场景:其他房间 — 一个人正在房间里安静地打电话。<br>
+        终点场景:走廊 — 一个人正在打扫卫生或使用吸尘器。
+      </blockquote>
+
+      <h4>输出(LLM 增强后的 HA-R2R 指令)</h4>
+      <blockquote class="original">
+        <div class="quote-label">英文原文</div>
+        You should start from the room. Before you walk through the doorway into the hallway, you will notice someone quietly making a phone call, so please remain quiet as you move. Then, proceed down the hallway past the landing. As you continue through the corridor, you will see a responsible cleaner using a vacuum to tidy up. Finally, your destination is at the end of the hallway, enter the first door on the right and stop in the doorway.
+      </blockquote>
+      <blockquote class="translation">
+        <div class="quote-label">中文翻译</div>
+        你应该从这个房间出发。在你穿过门口走进走廊之前,你会注意到有人正在安静地打电话,所以请在移动时保持安静。然后,沿着走廊走过楼梯平台。当你继续穿过这条走廊时,你会看到一个尽职的清洁工正在用吸尘器打扫卫生。最后,你的目的地在走廊的尽头,从右边的第一扇门进去,在门口停下。
+      </blockquote>
+
+      <h2><span class="section-icon"></span>迭代调优过程(实操经验)</h2>
+
+      <div class="callout callout-warning">
+        <div class="callout-icon">!</div>
+        <div class="callout-content">
+          <strong>论文明确说</strong>:最初模型生成的内容"无关或带有主观色彩",经过<strong>多轮迭代</strong>才稳定。我们项目要预留这个调优时间。
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="flow-step"><span class="flow-num">1</span>审查输出 → 识别不一致的地方</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">2</span>修改 system prompt → 强调中性语气、避免主观描述</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">3</span>更新 few-shot 例子 → 展示期望的细节级别</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">4</span>多轮迭代 → 直到风格稳定</div>
+      </div>
+
+      <h3>验证机制</h3>
+      <p><strong>不做 NLP metric 评估</strong>,而是<strong>用 SOTA agent retrain 看是否兼容</strong>。BEVBert 在 HA-R2R 上 retrained 后,SR 从 0.19 → 0.27 (seen),0.15 → 0.21 (unseen)。这正是"benchmark 论文"应该做的验证方式。</p>
+
+      <div class="footnote">
+        论文链接:arXiv:2503.14229 · 完整 prompt 在官方 GitHub:F1y1113/HA-VLN
+      </div>
+    </section>
+
+    <!-- ============= PAGE: RoomTour3D ============= -->
+    <section class="page" id="page-roomtour">
+      <div class="page-meta">新工作 · 05 · Pipeline 参考</div>
+      <h1>RoomTour3D</h1>
+      <p class="page-subtitle">从 YouTube 房产视频通过多模型 caption 全自动生成 200K 指令。100% 无人工。</p>
+
+      <div class="tag-row">
+        <span class="tag tag-gray">CVPR 2025</span>
+        <span class="tag tag-gray">Han et al.</span>
+        <span class="tag tag-green">Pipeline 参考</span>
+        <span class="tag tag-gray">arXiv:2412.08591</span>
+      </div>
+
+      <h2><span class="section-icon"></span>指令实例</h2>
+
+      <h4>样例 1 · 主要展示样例(论文 Figure 1)</h4>
+      <blockquote class="original">
+        <div class="quote-label">英文原文</div>
+        Move through the corridor and step forwards. Pass by a paint on the wall. Then advance through the bedroom and into the bathroom. Start with a view of the bed, curtains, and lamp in the distance. Move closer, noting the headboard, nightstand, and chandelier. Pass the dresser and drawers towards the doorway. In the bathroom, ...
+      </blockquote>
+      <blockquote class="translation">
+        <div class="quote-label">中文翻译</div>
+        穿过走廊向前走。经过墙上的一幅画。然后穿过卧室进入浴室。从远处的床、窗帘和台灯的视角开始。走近一些,注意床头板、床头柜和吊灯。经过梳妆台和抽屉柜,朝着门口走。在浴室里,……
+      </blockquote>
+
+      <h4>样例 2 · Prompt 中的 in-context example</h4>
+      <blockquote class="original">
+        <div class="quote-label">英文原文</div>
+        Exit the study. Move from left to right, start near plant, laptop, and table, pass a bookshelf…
+      </blockquote>
+      <blockquote class="translation">
+        <div class="quote-label">中文翻译</div>
+        走出书房。从左向右移动,从植物、笔记本电脑和桌子附近出发,经过一个书架……
+      </blockquote>
+
+      <h4>样例 3 · 中间步骤的 frame caption(模板生成,不是最终指令)</h4>
+      <blockquote class="original">
+        <div class="quote-label">英文原文</div>
+        There is a bed, blanket, table to the right of the current spot in the near distance. There is a picture frame and curtain to the left of the current spot in closer distance. There is a chandelier and pillow in the middle in a closer distance. There is a window and lamp in the middle in a further distance.
+      </blockquote>
+      <blockquote class="translation">
+        <div class="quote-label">中文翻译</div>
+        在当前位置的右侧近距离处有一张床、一条毯子和一张桌子。在当前位置的左侧较近距离处有一个相框和一面窗帘。在中间较近距离处有一盏吊灯和一个枕头。在中间较远距离处有一扇窗户和一盏台灯。
+      </blockquote>
+
+      <h2><span class="section-icon"></span>风格特点总结</h2>
+
+      <div class="info-grid">
+        <div class="info-row">
+          <span class="info-label">平均长度</span>
+          <span class="info-value">~50–80 词(论文未给精确数字)</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">规模</span>
+          <span class="info-value">100K trajectories + 200K instructions</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">句式</span>
+          <span class="info-value">祈使句 + 描述性混合</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">地标方式</span>
+          <span class="info-value">密集 open-vocabulary 物体提及</span>
+        </div>
+      </div>
+
+      <h2><span class="section-icon"></span>GT 轨迹设计</h2>
+
+      <div class="info-grid">
+        <div class="info-row">
+          <span class="info-label">场景来源</span>
+          <span class="info-value">网络 room-tour 视频(YouTube,~243 小时)</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">场景数</span>
+          <span class="info-value">1,847 个 environments(远超 MP3D 的 90)</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">采样间距</span>
+          <span class="info-value">~1.5m(对应 1.42 m/s 人类步速)</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">3D 重建</span>
+          <span class="info-value">COLMAP</span>
+        </div>
+      </div>
+
+      <h2><span class="section-icon"></span>如何生成 instruction(★ Pipeline 完整解析)</h2>
+
+      <p>这是一个<strong>多模型协作的全自动 pipeline</strong>。我们 3DGS 项目可以借鉴它的工程结构。</p>
+
+      <div class="card">
+        <h3 style="margin-top:0">完整流水线</h3>
+        <div class="flow-step"><span class="flow-num">1</span><strong>视频采样</strong> · 每 2 秒一帧(对应 1.42 m/s 人类步速)</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">2</span><strong>BLIP-2</strong> · VQA "Which room am I in?",16 选 1(bedroom/kitchen/...)。50-clip 验证准确率 85%</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">3</span><strong>RAM</strong> · 给每帧打开放词表 object tags</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">4</span><strong>Grounding-DINO</strong> · 给每个 object 定位 bbox</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">5</span><strong>Depth-Anything</strong> · 估计相对深度</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">6</span><strong>模板化 caption</strong> · "There is a &lt;obj&gt; to the &lt;direction&gt; in &lt;distance&gt;"</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">7</span><strong>GPT-4-Turbo</strong> · 任务指令 + 2 in-context examples + frame captions → 最终 instruction</div>
+      </div>
+
+      <h3>关键模板(中间步骤,可直接抄)</h3>
+      <pre><code>"There is a &lt;object tag&gt; to the &lt;spatial position&gt; of current spot in &lt;relative distance&gt;."
+
+# 距离三档:near distance / closer distance / further distance
+# 方位三档:left / middle / right</code></pre>
+
+      <p><strong>关键点</strong>:不写绝对坐标,只写相对位置。这点对我们 3DGS 项目很有借鉴价值。</p>
+
+      <h3>GPT-4 Task Instruction(完整原文 + 翻译)</h3>
+
+      <blockquote class="original">
+        <div class="quote-label">英文原文</div>
+        You will be given a set of continuous frames. The frames are captured during the camera movement. During movement, the objects in the frames change gradually, like objects passing by, objects moving towards somewhere.<br><br>
+        You should return a single and concrete sentence describing the camera moving trajectory by the object's progression in the frames. You don't need to mention all the objects. It is good to describe the moving trajectory without all of the objects.
+      </blockquote>
+      <blockquote class="translation">
+        <div class="quote-label">中文翻译</div>
+        你将得到一组连续的视频帧。这些帧是在相机移动过程中拍摄的。在移动过程中,帧中的物体逐渐变化,比如物体被经过、物体朝某处移动。<br><br>
+        你应该返回<strong>一句单独的、具体的句子</strong>,通过帧中物体的渐变过程来描述相机的移动轨迹。<strong>你不需要提及所有物体</strong>。在不提及所有物体的情况下描述移动轨迹反而是好的。
+      </blockquote>
+
+      <div class="callout callout-success">
+        <div class="callout-icon">★</div>
+        <div class="callout-content">
+          <strong>这两条约束最值钱:</strong> ① "single and concrete sentence" — 否则 GPT-4 会写小作文;② "you don't need to mention all the objects" — 让 GPT-4 学会取舍。
+        </div>
+      </div>
+
+      <h3>In-context Example(原文 + 翻译)</h3>
+
+      <blockquote class="original">
+        <div class="quote-label">英文原文</div>
+        &lt;0&gt;: In the study. there is a plant…to the left of the current spot...<br>
+        &lt;1&gt;: In the study. there is a bookshelf to the left of the current spot…<br>
+        &lt;2&gt;: In the hallway. there is a door to the left of the current spot…<br>
+        Your moving trajectory description: Exit the study. Move from left to right, start near plant, laptop, and table, pass a bookshelf…
+      </blockquote>
+      <blockquote class="translation">
+        <div class="quote-label">中文翻译</div>
+        &lt;0&gt;:在书房中。在当前位置的左侧有一棵植物……<br>
+        &lt;1&gt;:在书房中。在当前位置的左侧有一个书架……<br>
+        &lt;2&gt;:在走廊中。在当前位置的左侧有一扇门……<br>
+        你的移动轨迹描述:走出书房。从左向右移动,从植物、笔记本电脑和桌子附近出发,经过一个书架……
+      </blockquote>
+
+      <h2><span class="section-icon"></span>验证机制</h2>
+
+      <div class="callout callout-info">
+        <div class="callout-icon">i</div>
+        <div class="callout-content">
+          <strong>4 分量表人工评估</strong>(我们可以直接抄):随机抽 100 条,1 分"完全无关",2 分"部分相关",3 分"基本相关",4 分"完全匹配"。<br>
+          <strong>评估结果</strong>:平均 3.08 分;74% 被评为"基本相关"或"完全匹配"。
+        </div>
+      </div>
+
+      <div class="footnote">
+        论文链接:arXiv:2412.08591 · HuggingFace dataset:roomtour3d/roomtour3d
+      </div>
+    </section>
+
+    <!-- ============= PAGE: C-Instructor ============= -->
+    <section class="page" id="page-cinst">
+      <div class="page-meta">新工作 · 06 · 思想可借鉴</div>
+      <h1>C-Instructor</h1>
+      <p class="page-subtitle">基于 LLaMA-7B 训练的可控 instruction generator。CoTL 思想:先抽 landmark,再生成完整指令。</p>
+
+      <div class="tag-row">
+        <span class="tag tag-gray">ECCV 2024</span>
+        <span class="tag tag-gray">Kong et al.</span>
+        <span class="tag tag-green">思想可借鉴</span>
+        <span class="tag tag-gray">arXiv:2407.07433</span>
+      </div>
+
+      <h2><span class="section-icon"></span>指令实例</h2>
+
+      <p>C-Instructor 是<strong>生成器模型</strong>,不是新数据集。指令风格随训练目标(R2R / REVERIE / R2R-Last)切换。</p>
+
+      <h4>样例 1 · 成功生成(R2R 风格,Figure 7)</h4>
+      <blockquote class="original">
+        <div class="quote-label">英文原文(C-Instructor 生成)</div>
+        Exit the bedroom and walk through the hallway…
+      </blockquote>
+      <blockquote class="translation">
+        <div class="quote-label">中文翻译</div>
+        走出卧室,然后穿过走廊……
+      </blockquote>
+
+      <h4>样例 2 · 失败案例对照(Figure 8)</h4>
+      <blockquote class="original">
+        <div class="quote-label">英文原文 · 人工标注 (Annotation)</div>
+        Turn right and exit the bedroom. Turn left and walk through the doorway. Wait at the top of the stairs.
+      </blockquote>
+      <blockquote class="translation">
+        <div class="quote-label">中文翻译</div>
+        向右转,走出卧室。向左转,穿过门口。在楼梯顶端等待。
+      </blockquote>
+
+      <blockquote class="original">
+        <div class="quote-label">英文原文 · C-Instructor 生成 (Generation)</div>
+        Exit the bedroom and walk through the hallway…
+      </blockquote>
+      <blockquote class="translation">
+        <div class="quote-label">中文翻译</div>
+        走出卧室,然后穿过走廊……
+      </blockquote>
+
+      <p style="font-size:13px;color:var(--text-tertiary);">对照可以看出:模型漏了"右转""左转""楼梯顶端等待"等关键动作信息,这是论文中的失败案例。</p>
+
+      <h2><span class="section-icon"></span>方法特点总结</h2>
+
+      <div class="info-grid">
+        <div class="info-row">
+          <span class="info-label">基础模型</span>
+          <span class="info-value">LLaMA-7B + LLaMA-Adapter</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">视觉编码</span>
+          <span class="info-value">CLIP-ViT-L-14 + 8 ViT blocks</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">训练范围</span>
+          <span class="info-value">仅 finetune LLM 最后 2 层</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">数据</span>
+          <span class="info-value">复用 R2R / REVERIE / PREVALENT</span>
+        </div>
+      </div>
+
+      <h2><span class="section-icon"></span>三个核心组件</h2>
+
+      <div class="card">
+        <h3 style="margin-top:0">① CoTL · Chain of Thought with Landmarks(★ 最值得借鉴)</h3>
+        <blockquote class="original">
+          <div class="quote-label">英文原文</div>
+          CoTL employs a step-by-step thinking approach to guide the model to identify crucial landmarks before generating complete instructions.
+        </blockquote>
+        <blockquote class="translation">
+          <div class="quote-label">中文翻译</div>
+          CoTL 采用<strong>分步思考</strong>的方法,引导模型在生成完整指令<strong>之前先识别关键地标</strong>。
+        </blockquote>
+        <p><strong>Landmark 来源</strong>:</p>
+        <ul>
+          <li><code>Λ_x</code> — 从训练集 instruction 文本里抽出的 landmark</li>
+          <li><code>Λ_a</code> — 从视觉 panorama 用 spatial-temporal 选取的 landmark(score threshold β=0.25)</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0">② STMT · Spatial Topology Modeling Task</h3>
+        <blockquote class="original">
+          <div class="quote-label">英文原文</div>
+          STMT incorporates spatial connectivity prediction as an auxiliary task in training to facilitate the understanding of the topological structure of the environment. ... we make the model predict how to return to the previous location from the current viewpoint.
+        </blockquote>
+        <blockquote class="translation">
+          <div class="quote-label">中文翻译</div>
+          STMT 将<strong>空间连通性预测</strong>作为训练中的辅助任务,以促进对环境拓扑结构的理解。……我们让模型预测<strong>如何从当前视角回到上一个位置</strong>。
+        </blockquote>
+        <p>这是<strong>辅助 loss</strong>,作用是让 trajectory encoder 学到更好的空间表征。</p>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0">③ SMT · Style-Mixed Training</h3>
+        <blockquote class="original">
+          <div class="quote-label">英文原文</div>
+          Distinct instruction styles are trained using prompts as differentiation, enabling control over the style of generated instructions.
+        </blockquote>
+        <blockquote class="translation">
+          <div class="quote-label">中文翻译</div>
+          <strong>不同的指令风格使用 prompt 作为区分</strong>进行训练,从而能够控制生成指令的风格。
+        </blockquote>
+        <p><strong>实操层面</strong>:同一模型,不同 prompt prefix:</p>
+        <ul>
+          <li><code>"Generate an R2R-style instruction:"</code> → R2R 风格</li>
+          <li><code>"Generate a REVERIE-style instruction:"</code> → REVERIE 风格(短、目标对象式)</li>
+          <li><code>"Generate an R2R-Last-style instruction:"</code> → 只描述最后一段</li>
+        </ul>
+      </div>
+
+      <h2><span class="section-icon"></span>给我们项目的启发(★ 思想降级版)</h2>
+
+      <div class="callout callout-success">
+        <div class="callout-icon">✓</div>
+        <div class="callout-content">
+          虽然我们大概率不会自己训生成器(成本高),但<strong>把 CoTL 思想搬到 prompt 里</strong>是免费的:把"先抽 landmark 再生成"做成两步 prompt。我们 3DGS 已有 bbox 标注 → 直接当 ground-truth landmark 喂给 GPT-4。
+        </div>
+      </div>
+
+      <pre><code>第 1 步 Prompt:
+"Given the trajectory and bounding boxes,
+list the key landmarks the agent will pass."
+
+第 2 步 Prompt:
+"Based on the landmarks above,
+generate an R2R-style instruction in 25-35 words."</code></pre>
+
+      <h3>评估结果(论文 Table 1)</h3>
+      <p>在 R2R val unseen 上,SPICE 比之前最佳<strong>提升 3.8 (绝对) / 21.8% (相对)</strong>。这证明 landmark-first 策略真的有效。</p>
+
+      <div class="footnote">
+        论文链接:arXiv:2407.07433 · 官方代码:refkxh/C-Instructor
+      </div>
+    </section>
+
+    <!-- ============= PAGE: LH-VLN ============= -->
+    <section class="page" id="page-lhvln">
+      <div class="page-meta">新工作 · 07 · 风格反例</div>
+      <h1>LH-VLN / LHPR-VLN</h1>
+      <p class="page-subtitle">长程多阶段任务式指令。<strong>这正是我们不对齐的风格</strong>,放在这里是为了让大家看清差异。</p>
+
+      <div class="tag-row">
+        <span class="tag tag-gray">CVPR 2025</span>
+        <span class="tag tag-gray">Song et al.</span>
+        <span class="tag tag-orange">不对齐(反例)</span>
+        <span class="tag tag-gray">arXiv:2412.09082</span>
+      </div>
+
+      <h2><span class="section-icon"></span>指令实例</h2>
+
+      <h4>样例 1 · 多阶段任务(Figure 1)</h4>
+      <blockquote class="original">
+        <div class="quote-label">英文原文</div>
+        Take the towel in bathroom to the kitchen island in kitchen, then grab the teapot and release it on the coffee table in the living room
+      </blockquote>
+      <blockquote class="translation">
+        <div class="quote-label">中文翻译</div>
+        把浴室里的毛巾拿到厨房的中岛上,然后抓起茶壶把它放到客厅的茶几上。
+      </blockquote>
+
+      <h4>样例 2 · 三阶段任务(Figure 2)</h4>
+      <blockquote class="original">
+        <div class="quote-label">英文原文</div>
+        Move the vase in living room to the cabinet in kitchen, then grab the flower next to it to the sink in bathroom
+      </blockquote>
+      <blockquote class="translation">
+        <div class="quote-label">中文翻译</div>
+        把客厅里的花瓶搬到厨房的橱柜上,然后抓起旁边的花拿到浴室的水槽边。
+      </blockquote>
+
+      <h4>样例 3 · Step-by-step 子任务(Backward generation)</h4>
+      <blockquote class="original">
+        <div class="quote-label">英文原文</div>
+        Move forward along the hallway, turn right at the kitchen counter, then proceed forward to reach the cabinet
+      </blockquote>
+      <blockquote class="translation">
+        <div class="quote-label">中文翻译</div>
+        沿着走廊向前走,在厨房台面处向右转,然后继续向前走到达橱柜。
+      </blockquote>
+
+      <div class="callout callout-warning">
+        <div class="callout-icon">!</div>
+        <div class="callout-content">
+          注意:Step-by-step 子任务(样例 3)其实<strong>很像 R2R 风格</strong>。这部分的 backward generation 流程对我们有借鉴价值。
+        </div>
+      </div>
+
+      <h2><span class="section-icon"></span>风格特点总结</h2>
+
+      <div class="info-grid">
+        <div class="info-row">
+          <span class="info-label">平均长度</span>
+          <span class="info-value"><strong>18.17 词</strong>(比 R2R 还短)</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">规模</span>
+          <span class="info-value">3,260 tasks</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">平均步数</span>
+          <span class="info-value"><strong>~150 steps/task</strong>(超长程)</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">指令粒度</span>
+          <span class="info-value"><strong>多阶段(2-4 子任务)</strong></span>
+        </div>
+      </div>
+
+      <h3>核心模板</h3>
+      <pre><code>"Find/Take/Move <object> in <room>,
+ and take it to <object/place> in <room>,
+ then ..."
+
+# 高层目标导向,不描述路径细节
+# "then" 是子任务连接关键词
+# 只点名 object + room,不描述路径中间地标</code></pre>
+
+      <h2><span class="section-icon"></span>GT 轨迹设计</h2>
+
+      <div class="info-grid">
+        <div class="info-row">
+          <span class="info-label">场景来源</span>
+          <span class="info-value">HM3D(216 scenes)</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">规模</span>
+          <span class="info-value">3,260 tasks · 平均 150 步</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">子任务分布</span>
+          <span class="info-value">2 sub: 39%, 3 sub: 52.4%, 4 sub: 8.6%</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">动作空间</span>
+          <span class="info-value">FORWARD 0.25m, TURN ±30°, STOP</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">成功条件</span>
+          <span class="info-value">1m 内 + target 在 60° HFOV 内</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">观察视角</span>
+          <span class="info-value">+60° / 0° / -60° 三视角</span>
+        </div>
+      </div>
+
+      <h2><span class="section-icon"></span>如何生成 instruction(NavGen 双向流程)</h2>
+
+      <p>NavGen 是<strong>双向生成 pipeline</strong>:Forward 生成多阶段任务,Backward 把任务拆成 step-by-step。</p>
+
+      <div class="card">
+        <h3 style="margin-top:0">Forward Generation · 生成多阶段任务</h3>
+        <div class="flow-step"><span class="flow-num">1</span><strong>输入</strong>:Scene assets S(HM3D 房间+物体)+ Robot config R</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">2</span><strong>GPT-4 + Prompt_1</strong> → 多阶段复杂指令 + subtask 列表</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">3</span><strong>Habitat simulator</strong> + greedy pathfinder → 生成 expert trajectory</div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0">Backward Generation · 拆 step-by-step</h3>
+        <div class="flow-step"><span class="flow-num">1</span><strong>Trajectory Splitting Algorithm</strong> · 用 sliding window(大小 3)在 trajectory 里找最长连续动作段(turn_left / turn_right / move_forward)</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">2</span><strong>RAM 给每段图像打 tag</strong>(高置信度)</div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">3</span><strong>GPT-4 + Prompt_2</strong>:输入 (action, tag) 对 → 输出 step-by-step R2R-style 指令</div>
+      </div>
+
+      <h3>Backward Prompt 输入输出例子(论文 Figure 2)</h3>
+
+      <blockquote class="original">
+        <div class="quote-label">英文原文 · 输入</div>
+        Move Forward: Hallway<br>
+        Turn Right: Kitchen Counter<br>
+        Move Forward: Kitchen
+      </blockquote>
+      <blockquote class="translation">
+        <div class="quote-label">中文翻译 · 输入</div>
+        向前移动:走廊<br>
+        向右转:厨房台面<br>
+        向前移动:厨房
+      </blockquote>
+
+      <blockquote class="original">
+        <div class="quote-label">英文原文 · 输出</div>
+        Move forward along the hallway, turn right at the kitchen counter, then proceed forward to reach the cabinet
+      </blockquote>
+      <blockquote class="translation">
+        <div class="quote-label">中文翻译 · 输出</div>
+        沿着走廊向前走,在厨房台面处向右转,然后继续向前走到达橱柜。
+      </blockquote>
+
+      <h2><span class="section-icon"></span>为什么我们不对齐 LH-VLN(导师判断的依据)</h2>
+
+      <div class="callout callout-danger">
+        <div class="callout-icon">×</div>
+        <div class="callout-content">
+          <strong>论文实测(Table 2):</strong>R2R 训练的 SOTA 模型(NaviLLM, ETPNav)在 LH-VLN 上 <strong>SR = 0%</strong>,完全跑不动。
+        </div>
+      </div>
+
+      <ul>
+        <li><strong>风格根本不同</strong>:LH-VLN 是高层任务式("拿 X 到 Y"),R2R 是路径式("走过钢琴,在鹿角旁等待")</li>
+        <li><strong>所需能力不同</strong>:LH-VLN 需要 memory 跨 subtask 持续 + task decomposition + 150 步长程规划。R2R agent 不具备</li>
+        <li><strong>在 LH-VLN 上"涨点"需要重写 agent 架构</strong>,我们的 benchmark 论文不可能要求别人改架构</li>
+      </ul>
+
+      <h2><span class="section-icon"></span>但 backward generation 思路可以借鉴</h2>
+
+      <div class="callout callout-success">
+        <div class="callout-icon">✓</div>
+        <div class="callout-content">
+          NavGen 的 backward 流程(trajectory → 切动作段 → GPT-4 生成 R2R-style 指令)<strong>正是我们项目要做的</strong>。等于论文白送我们一套现成 pipeline。
+        </div>
+      </div>
+
+      <div class="footnote">
+        论文链接:arXiv:2412.09082 · 数据集:Starry123/LHPR-VLN(HuggingFace)
+      </div>
+    </section>
+
+    <!-- ============= PAGE: 推荐 Prompt 方案 ============= -->
+    <section class="page" id="page-prompt-recipe">
+      <div class="page-meta">实操参考</div>
+      <h1>推荐 Prompt 方案</h1>
+      <p class="page-subtitle">融合 4 家精华(HA-R2R + RoomTour3D + C-Instructor + LH-VLN)的 instruction 生成 prompt,可直接用在我们 3DGS 项目上。</p>
+
+      <h2><span class="section-icon"></span>推荐架构</h2>
+
+      <div class="card">
+        <h3 style="margin-top:0">五阶段流水线</h3>
+        <div class="flow-step"><span class="flow-num">1</span><strong>Frame-level 信息提取</strong>(借鉴 RoomTour3D)<br>
+          对每个关键 viewpoint:用我们已有的 bbox 标注得物体 tag → 估计相对位置(left/middle/right)和距离(near/closer/further)→ 用模板生成 frame caption
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">2</span><strong>Landmark 抽取</strong>(借鉴 C-Instructor 的 CoTL)<br>
+          从 frame captions 中筛选 5-7 个最显著的 landmark(转弯点 / 终点 / 显著物体优先)
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">3</span><strong>轨迹切分</strong>(借鉴 LH-VLN 的 backward generation)<br>
+          按 turning angle 把轨迹切成动作段(forward / turn-left / turn-right / stop),每段配最相关 landmark
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">4</span><strong>GPT-4 生成 R2R 风格指令</strong>(借鉴 HA-R2R 的 prompt)<br>
+          输入 (action, landmark) 序列 + R2R-style 约束 + few-shot example
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-num">5</span><strong>验证</strong>(借鉴 RoomTour3D 的 4 分量表)<br>
+          抽 100 条人工打分 + retrain SOTA agent 看是否能涨点
+        </div>
+      </div>
+
+      <h2><span class="section-icon"></span>System Prompt(可直接复制)</h2>
+
+      <h3>英文原文(给 GPT-4 用)</h3>
+      <pre><code>You are an expert at generating R2R-style navigation instructions
+for indoor robots.
+
+R2R-style instructions have these strict requirements:
+
+1. Length: 25-35 words.
+2. Style: imperative sentences only. Do NOT use "you", "please",
+   or polite phrases.
+3. Start with an action verb: walk, turn, exit, head, pass, go, take.
+4. Each clause must reference one concrete landmark (object or room).
+5. Use prepositions: past X, through X, down X, into X, at X,
+   next to X, on the left/right of X.
+6. End with a stopping action: stop, wait, or stand.
+   Format: "stop at/by/next to &lt;landmark&gt;".
+7. Maintain a neutral tone. Avoid descriptions of mood, atmosphere,
+   or subjective feelings.
+8. Do NOT mention all landmarks. Only use the most distinctive ones
+   at decision points.</code></pre>
+
+      <h3>中文翻译(对照理解)</h3>
+      <pre><code>你是一位专门为室内机器人生成 R2R 风格导航指令的专家。
+
+R2R 风格指令有以下严格要求:
+
+1. 长度:25-35 词。
+2. 风格:只用祈使句。不要使用 "you"、"please" 或礼貌用语。
+3. 以动作动词开头:walk(走)、turn(转)、exit(走出)、
+   head(朝向)、pass(经过)、go(去)、take(拿)。
+4. 每个分句都必须引用一个具体的地标(物体或房间)。
+5. 使用介词短语:past X(经过 X)、through X(穿过 X)、
+   down X(沿着 X 往前)、into X(进入 X)、at X(在 X)、
+   next to X(在 X 旁边)、on the left/right of X(在 X 的左/右边)。
+6. 以停止动作结尾:stop、wait 或 stand。
+   格式:"stop at/by/next to &lt;地标&gt;"。
+7. 保持中性语气。避免描述情绪、氛围或主观感受。
+8. 不要提及所有地标。只使用最显著的、在决策点的地标。</code></pre>
+
+      <h2><span class="section-icon"></span>User Prompt + Few-shot(可直接复制)</h2>
+
+      <pre><code>Given the following sequence of (action, landmark) pairs
+describing a robot's path, generate a single R2R-style
+navigation instruction.
+
+Few-shot examples:
+
+Example 1:
+Input:
+- start in: bedroom
+- walk forward: family picture
+- enter: bathroom
+- pass: bathtub, mirrors
+- pass through: doorway
+- stop: bathroom door (right), closet door (left)
+Output: "Standing in front of the family picture, turn left and
+walk straight through the bathroom past the tub and mirrors.
+Go through the doorway and stop when the door to the bathroom
+is on your right and the door to the closet is to your left."
+
+Example 2:
+Input:
+- exit: office
+- turn left: hallway
+- walk down: hallway
+- enter: office 359
+- stop: office 359
+Output: "Exit the office then turn left and then turn left in
+the hallway and head down the hallway until you get to a door
+on your left and go into office 359 then stop."
+
+Now generate for:
+{your_action_landmark_sequence}
+
+Output:</code></pre>
+
+      <h2><span class="section-icon"></span>避坑提示(基于 4 家踩过的坑)</h2>
+
+      <div class="callout callout-warning">
+        <div class="callout-icon">!</div>
+        <div class="callout-content">
+          <strong>HA-R2R 教训</strong>:LLM 一开始一定会写得太文艺,"objective" 和 "avoid embellishments" 必须在 system prompt 里反复强调。<strong>多轮迭代调优 prompt 是不可避免的,留出 1-2 周时间</strong>。
+        </div>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-icon">!</div>
+        <div class="callout-content">
+          <strong>RoomTour3D 教训</strong>:不限制 "single sentence" 的话,GPT-4 会写小作文。<strong>长度约束必须强制</strong>(我们已加 "25-35 words")。
+        </div>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-icon">!</div>
+        <div class="callout-content">
+          <strong>C-Instructor 教训</strong>:landmark 先抽再生成的两步法效果远好于一步生成。<strong>不要让 GPT-4 一步到位</strong>,先让它输出 landmark list,再 conditioned 生成。
+        </div>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-icon">!</div>
+        <div class="callout-content">
+          <strong>LH-VLN 教训</strong>:backward generation 比 forward 更适合 R2R 风格 — <strong>先有 trajectory,再用 trajectory 反推指令</strong>,比"先有指令,再让 agent 跑"质量稳定得多。
+        </div>
+      </div>
+
+      <h2><span class="section-icon"></span>验证打分细则(基于 RoomTour3D 4 分量表)</h2>
+
+      <div class="card">
+        <h3 style="margin-top:0">100 条样本人工评估</h3>
+        <table style="margin: 12px 0; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
+          <thead>
+            <tr><th>分数</th><th>等级</th><th>判定标准</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>4</strong></td><td>完全匹配</td><td>指令准确描述路径,地标正确,风格符合 R2R</td></tr>
+            <tr><td><strong>3</strong></td><td>基本相关</td><td>指令大致正确,可能漏 1-2 个地标但不影响导航</td></tr>
+            <tr><td><strong>2</strong></td><td>部分相关</td><td>指令含有错误或与路径偏离,但仍能识别基本意图</td></tr>
+            <tr><td><strong>1</strong></td><td>完全无关</td><td>指令错乱、地标错位或风格不对(过文艺/过短/无 stop)</td></tr>
+          </tbody>
+        </table>
+        <p style="margin: 8px 0 0;"><strong>目标</strong>:平均分 ≥ 3.0,3+4 分占比 ≥ 70%(对齐 RoomTour3D 标准)。</p>
+      </div>
+
+      <h2><span class="section-icon"></span>最终建议</h2>
+
+      <div class="callout callout-success">
+        <div class="callout-icon">✓</div>
+        <div class="callout-content">
+          <strong>对齐 R2R 是正确决定。</strong>HA-R2R 的 prompt 直接搬过来 + RoomTour3D 的多模型 caption pipeline 补充物体细节 + C-Instructor 的 CoTL 思想,基本就是我们 instruction generation 模块该走的路径。轨迹层面照抄 VLN-CE 的 episode 格式和 0.25m / 15° / 3m goal radius 这些数字,与 SOTA 完全兼容。
+        </div>
+      </div>
+
+      <div class="footnote">
+        本调研基于 7 篇论文 / 6 个官方代码仓库的真实信息整理。所有 prompt 模板与数字均可溯源到论文原文。
+      </div>
+    </section>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  // 简单的 Tab 切换 + 滚动到顶部
+  const navItems = document.querySelectorAll('.nav-item');
+  const overviewCards = document.querySelectorAll('.overview-card');
+  const pages = document.querySelectorAll('.page');
+
+  function switchPage(targetId) {
+    // 切换 page 显示
+    pages.forEach(p => p.classList.remove('active'));
+    const target = document.getElementById('page-' + targetId);
+    if (target) target.classList.add('active');
+
+    // 切换 nav active 状态
+    navItems.forEach(n => n.classList.remove('active'));
+    const navTarget = document.querySelector('.nav-item[data-target="' + targetId + '"]');
+    if (navTarget) navTarget.classList.add('active');
+
+    // 滚动到顶部
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const target = item.dataset.target;
+      switchPage(target);
+    });
+  });
+
+  overviewCards.forEach(card => {
+    card.addEventListener('click', () => {
+      const target = card.dataset.target;
+      switchPage(target);
+    });
+  });
+</script>
+
+</body>
+</html>
